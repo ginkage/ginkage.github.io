@@ -1,0 +1,470 @@
+<html>
+
+<head>
+<title>The Planet</title>
+<script type="text/javascript" src="webgl-utils.js"></script>
+
+<script id="quad-vs" type="x-shader/x-vertex">
+    precision mediump float;
+    attribute vec4 vPosition;
+    uniform vec4 uRatio;
+    varying vec4 Position;
+
+    void main() {
+        gl_Position = vPosition * uRatio;
+        Position = vPosition;
+    }
+</script>
+
+<script id="quad-fs" type="x-shader/x-fragment">
+    precision mediump float;
+    uniform sampler2D uTexture0;
+    uniform sampler2D uTexture1;
+    uniform sampler2D uTexture2;
+    uniform sampler2D uTexture3;
+    uniform vec3 uRotate;
+    varying vec4 Position;
+
+    void main() {
+        float sx = Position.x * 1.1;
+        float sy = -Position.y * 1.1;
+        float z2 = 1.0 - sx * sx - sy * sy;
+
+        if (z2 > 0.0) {
+            float sz = sqrt(z2);
+            float y = (sz * uRotate.y - sy * uRotate.z);
+            float z = (sy * uRotate.y + sz * uRotate.z);
+            float tx = (1.0 + sx) * 0.5;
+            float ty = (1.0 - y) * 0.5;
+            vec2 vCoord;
+
+            if (abs(z) > abs(y)) {
+                vec4 vTex = texture2D(uTexture1, vec2(tx, ty));
+                vec4 vOff = floor(vTex * 255.0 + 0.5);
+                vCoord = vec2(
+                    (vOff.y * 256.0 + vOff.x) / 16383.0,
+                    (vOff.w * 256.0 + vOff.z) / 16383.0);
+                if (z < 0.0) { vCoord.x = 1.0 - vCoord.x; }
+            }
+            else {
+                vec4 vTex = texture2D(uTexture2, vec2(tx, (1.0 + z) * 0.5));
+                vec4 vOff = floor(vTex * 255.0 + 0.5);
+                vCoord = vec2(
+                    (vOff.y * 256.0 + vOff.x) / 16383.0,
+                    (vOff.w * 256.0 + vOff.z) / 16383.0);
+                if (y < 0.0) { vCoord.y = 1.0 - vCoord.y; }
+            }
+
+            vCoord.x += uRotate.x;
+
+            vec3 vCol = texture2D(uTexture0, vCoord).rgb;
+            vec3 vNorm = normalize(texture2D(uTexture3, vCoord).rgb - 0.5);
+
+            float sin_theta = sy;
+            float cos_theta = sqrt(1.0 - sy * sy);
+            float sin_phi = sx / cos_theta;
+            float cos_phi = sz / cos_theta;
+            float light = (vNorm.z * cos_theta - vNorm.y * sin_theta) * cos_phi - vNorm.x * sin_phi;
+
+            gl_FragColor = vec4(vCol * light, 1.0);
+        } else {
+            gl_FragColor = vec4(0.25, 0.5, 1.0, (z2 + 0.21) * 1.5);
+        }
+    }
+</script>
+
+
+<script type="text/javascript">
+    var gl;
+    var canvas;
+
+    function loadShader(type, id)
+    {
+        var shaderScript = document.getElementById(id);
+        if (!shaderScript) {
+            return null;
+        }
+
+        var str = "";
+        var k = shaderScript.firstChild;
+        while (k) {
+            if (k.nodeType == 3) {
+                str += k.textContent;
+            }
+            k = k.nextSibling;
+        }
+
+        var shader = gl.createShader(type);
+        gl.shaderSource(shader, str);
+        gl.compileShader(shader);
+
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            alert(gl.getShaderInfoLog(shader));
+            return null;
+        }
+
+        return shader;
+    }
+
+    function compileProgram(vs, fs)
+    {
+        var vertexShader = loadShader(gl.VERTEX_SHADER, vs);
+        var fragmentShader = loadShader(gl.FRAGMENT_SHADER, fs);
+
+        var prog = gl.createProgram();
+        gl.attachShader(prog, vertexShader);
+        gl.attachShader(prog, fragmentShader);
+        gl.linkProgram(prog);
+
+        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+            alert("Could not initialize shaders");
+        }
+
+        return prog;
+    }
+
+    function arrayTexture(texSize, pixels)
+    {
+        var tex = gl.createTexture();
+        if (tex != 0) {
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, texSize, texSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        }
+        return tex;
+    }
+
+    function handleLoadedTexture(texture)
+    {
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    }
+
+    function loadTexture(path)
+    {
+        var texture = gl.createTexture();
+        texture.image = new Image();
+        texture.image.onload = function() {
+            handleLoadedTexture(texture)
+        }
+
+        texture.image.crossOrigin = "";
+        texture.image.src = path;
+        return texture;
+    }
+
+    function createBuffer(buffer)
+    {
+        var glBuf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, glBuf);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(buffer), gl.STATIC_DRAW);
+        return glBuf;
+    }
+
+
+    var quadProgram;
+
+    function initShaders()
+    {
+        quadProgram = compileProgram("quad-vs", "quad-fs");
+        quadProgram.vPosition = gl.getAttribLocation(quadProgram, "vPosition");
+        quadProgram.uRatio = gl.getUniformLocation(quadProgram, "uRatio");
+        quadProgram.uTexture0 = gl.getUniformLocation(quadProgram, "uTexture0");
+        quadProgram.uTexture1 = gl.getUniformLocation(quadProgram, "uTexture1");
+        quadProgram.uTexture2 = gl.getUniformLocation(quadProgram, "uTexture2");
+        quadProgram.uTexture3 = gl.getUniformLocation(quadProgram, "uTexture3");
+        quadProgram.uRotate = gl.getUniformLocation(quadProgram, "uRotate");
+    }
+
+    var quadBuffer;
+
+    function initBuffers()
+    {
+        var quad = [
+            -1,  1,
+            -1, -1,
+             1,  1,
+             1, -1,
+        ];
+        quadBuffer = createBuffer(quad);
+    }
+
+    var offsetTex1;
+    var offsetTex2;
+    var planetTex;
+    var normalTex;
+
+    function initTextures()
+    {
+        var texSize = 2048;
+        var r = texSize * 0.5;
+        var pixels = new Uint8Array(texSize * texSize * 4);
+
+        for (var row = 0, idx = 0; row < texSize; row++) {
+            var y = (r - row) / r;
+            var sin_theta = Math.sqrt(1 - y*y);
+            var theta = Math.acos(y);
+            var v = Math.round(16383 * theta / Math.PI);
+
+            for (var col = 0; col < texSize; col++) {
+                var x = (r - col) / r;
+                var u = 0;
+
+                if (x >= -sin_theta && x <= sin_theta) {
+                    var z = Math.sqrt(1 - y*y - x*x);
+                    var phi = Math.atan2(z, x);
+                    u = Math.round(16383 * phi / (2 * Math.PI));
+                }
+
+                pixels[idx++] = (u & 255);
+                pixels[idx++] = (u >> 8);
+                pixels[idx++] = (v & 255);
+                pixels[idx++] = (v >> 8);
+            }
+        }
+
+        offsetTex1 = arrayTexture(texSize, pixels);
+
+        for (var row = 0, idx = 0; row < texSize; row++) {
+            var z = (row - r) / r;
+            var x_limit = Math.sqrt(1 - z*z);
+
+            for (var col = 0; col < texSize; col++) {
+                var x = (r - col) / r;
+                var u = 0, v = 0;
+
+                if (x >= -x_limit && x <= x_limit) {
+                    var y = Math.sqrt(1 - z*z - x*x);
+                    var phi = Math.atan2(z, x);
+                    var theta = Math.acos(y);
+
+                    if (phi < 0) phi += (2 * Math.PI);
+                    u = Math.round(16383 * phi / (2 * Math.PI));
+                    v = Math.round(16383 * theta / Math.PI);
+                }
+
+                pixels[idx++] = (u & 255);
+                pixels[idx++] = (u >> 8);
+                pixels[idx++] = (v & 255);
+                pixels[idx++] = (v >> 8);
+            }
+        }
+
+        offsetTex2 = arrayTexture(texSize, pixels);
+
+        planetTex = loadTexture("planet.png");
+        normalTex = loadTexture("EarthNormalMap.png");
+    }
+
+    var ratioX = 1;
+    var ratioY = 1;
+    var rotateAngle = 0;
+    var tiltAngle = 0;
+    var scaleFactor = 1;
+    var rotateSpeed = -0.125;
+    var tiltSpeed = 0;
+
+    function drawScene()
+    {
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, planetTex);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, offsetTex1);
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, offsetTex2);
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, normalTex);
+
+        gl.useProgram(quadProgram);
+        gl.disable(gl.DEPTH_TEST);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
+        gl.enableVertexAttribArray(quadProgram.vPosition);
+        gl.vertexAttribPointer(quadProgram.vPosition, 2, gl.FLOAT, false, 8, 0);
+
+        gl.uniform1i(quadProgram.uTexture0, 0);
+        gl.uniform1i(quadProgram.uTexture1, 1);
+        gl.uniform1i(quadProgram.uTexture2, 2);
+        gl.uniform1i(quadProgram.uTexture3, 3);
+
+        var ta = tiltAngle * Math.PI;
+        gl.uniform3f(quadProgram.uRotate, rotateAngle, Math.sin(ta), Math.cos(ta));
+
+        var minScale = 0.5, maxScale = 2.0 / (ratioX < ratioY ? ratioX : ratioY);
+        if (scaleFactor < minScale) scaleFactor = minScale;
+        if (scaleFactor > maxScale) scaleFactor = maxScale;
+
+        gl.uniform4f(quadProgram.uRatio, ratioX * scaleFactor, ratioY * scaleFactor, 1, 1);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        gl.disable(gl.BLEND);
+    }
+
+
+    var lastTime = 0;
+
+    function animate() {
+        var timeNow = new Date().getTime();
+        if (lastTime != 0) {
+            var delta = (timeNow - lastTime) / 1000.0;
+
+            rotateAngle += delta * rotateSpeed;
+            rotateAngle -= Math.floor(rotateAngle);
+
+            tiltAngle += delta * tiltSpeed;
+            while (tiltAngle > 2) tiltAngle -= 2;
+            while (tiltAngle < 0) tiltAngle += 2;
+        }
+        lastTime = timeNow;
+    }
+
+    function tick() {
+        requestAnimFrame(tick);
+        drawScene();
+        animate();
+    }
+
+    function resizeCanvas() {
+        if (canvas.width != canvas.clientWidth || canvas.height != canvas.clientHeight) {
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+        }
+
+        if (gl) {
+            gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+
+        if (canvas.width < canvas.height) {
+            ratioX = 1;
+            ratioY = canvas.width / canvas.height;
+        }
+        else {
+            ratioX = canvas.height / canvas.width;
+            ratioY = 1;
+        }
+    }
+
+    function wheeldelta(event) {
+        event = event || window.event;
+        if (event.wheelDelta) return event.wheelDelta / 120.0;
+        if (event.detail) return -event.detail / 3.0;
+        if (event.originalEvent && event.originalEvent.wheelDelta)
+            return e.originalEvent.wheelDelta / 120.0;
+        return 0.0;
+    }
+
+    function mousewheel(event) {
+        scaleFactor += wheeldelta(event) / 10.0;
+        if (event.preventDefault)
+            event.preventDefault();
+        event.returnValue = false;
+        return false;
+    }
+
+    function webGLStart() {
+        canvas = document.getElementById("planet-canvas");
+        resizeCanvas();
+
+        gl = WebGLUtils.setupWebGL(canvas);
+        if (gl) {
+            gl.viewport(0, 0, canvas.width, canvas.height);
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+            initShaders()
+            initBuffers();
+            initTextures();
+
+            tick();
+        }
+        else {
+            alert("Could not initialize WebGL, sorry :-(");
+        }
+
+        canvas.addEventListener('mousewheel', mousewheel, false);
+        canvas.addEventListener('DOMMouseScroll', mousewheel, false);
+    }
+
+    var mouseX = 0;
+    var mouseY = 0;
+    var lastDX = 0;
+    var lastDY = 0;
+    var lastMouseTime = 0;
+    var mouseTime = 1;
+
+    document.onmousedown = function(event) {
+        event = event || window.event;
+        mouseX = event.offsetX ? (event.offsetX) : event.pageX - canvas.offsetLeft;
+        mouseY = event.offsetY ? (event.offsetY) : event.pageY - canvas.offsetTop;
+        lastDX = 0;
+        lastDY = 0;
+        mouseTime = 1;
+        rotateSpeed = 0;
+        tiltSpeed = 0;
+
+        document.onmousemove = function(event) {
+            event = event || window.event;
+            var x = event.offsetX ? (event.offsetX) : event.pageX - canvas.offsetLeft;
+            var y = event.offsetY ? (event.offsetY) : event.pageY - canvas.offsetTop;
+            var dx = x - mouseX;
+            var dy = y - mouseY;
+
+            rotateAngle -= dx / (canvas.width * ratioX * scaleFactor * Math.PI);
+            tiltAngle += dy * 0.5 / (canvas.height * ratioY * scaleFactor);
+
+            var timeNow = new Date().getTime();
+            if (lastMouseTime != 0) {
+                mouseTime = (timeNow - lastMouseTime) / 1000.0;
+            }
+            lastMouseTime = timeNow;
+
+            mouseX = x;
+            mouseY = y;
+            lastDX = dx;
+            lastDY = dy;
+        }
+    }
+
+    document.onmouseup = function(event) {
+        document.onmousemove = null;
+
+        var timeNow = new Date().getTime();
+        if (timeNow - lastMouseTime < 20) {
+            rotateSpeed = -lastDX / (canvas.width * ratioX * scaleFactor * Math.PI * mouseTime);
+            tiltSpeed = lastDY * 0.5 / (canvas.height * ratioY * scaleFactor * mouseTime);
+        }
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+</script>
+
+</head>
+
+<style>
+    canvas {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        outline: none;
+        -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+    }
+</style>
+
+<body onload="webGLStart();">
+    <canvas id="planet-canvas" style="position:absolute; top:0px; left:0px; background-color:#000000; width:100%; height:100%;"></canvas>
+</body>
+
+</html>
+
