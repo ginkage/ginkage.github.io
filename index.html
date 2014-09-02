@@ -335,9 +335,10 @@
 	}
 
 	function resizeCanvas() {
-		if (canvas.width != canvas.clientWidth || canvas.height != canvas.clientHeight) {
-			canvas.width = canvas.clientWidth;
-			canvas.height = canvas.clientHeight;
+		var dpr = window.devicePixelRatio || 1;
+		if (canvas.width != canvas.clientWidth*dpr || canvas.height != canvas.clientHeight*dpr) {
+			canvas.width = canvas.clientWidth*dpr;
+			canvas.height = canvas.clientHeight*dpr;
 		}
 
 		if (gl) {
