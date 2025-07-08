@@ -146,36 +146,31 @@ function exitFullscreen() {
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 function updateFullscreenButton() {
   var debugOverlay = document.getElementById('debugOverlay');
+  var isFS = isFullscreen();
   var debugText =
     'isMobile: ' + isMobile() + '<br>' +
     'isLandscape: ' + isLandscape() + '<br>' +
-    'isFullscreen: ' + isFullscreen() + '<br>' +
+    'isFullscreen: ' + (isFS ? 'true' : 'false') + '<br>' +
     'fullscreenBtn display: ' + fullscreenBtn.style.display;
   if (debugOverlay) debugOverlay.innerHTML = debugText;
-  if (isMobile() && isLandscape() && !isFullscreen()) {
+  if (isMobile() && isLandscape() && !isFS) {
     fullscreenBtn.style.display = 'block';
   } else {
     fullscreenBtn.style.display = 'none';
   }
 }
-fullscreenBtn.addEventListener('click', function() {
-  requestFullscreen(canvas);
-  fullscreenBtn.style.display = 'none';
-});
-window.addEventListener('orientationchange', () => setTimeout(() => {
-  handleAutoFullscreen();
-  updateFullscreenButton();
-}, 200));
-window.addEventListener('resize', () => setTimeout(() => {
-  handleAutoFullscreen();
-  updateFullscreenButton();
-}, 200));
-document.addEventListener('fullscreenchange', updateFullscreenButton);
-document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
-document.addEventListener('mozfullscreenchange', updateFullscreenButton);
-document.addEventListener('MSFullscreenChange', updateFullscreenButton);
+// Helper to call updateFullscreenButton after a short delay
+function delayedUpdateFullscreenButton() {
+  setTimeout(updateFullscreenButton, 300);
+}
+window.addEventListener('orientationchange', delayedUpdateFullscreenButton);
+window.addEventListener('resize', delayedUpdateFullscreenButton);
+document.addEventListener('fullscreenchange', delayedUpdateFullscreenButton);
+document.addEventListener('webkitfullscreenchange', delayedUpdateFullscreenButton);
+document.addEventListener('mozfullscreenchange', delayedUpdateFullscreenButton);
+document.addEventListener('MSFullscreenChange', delayedUpdateFullscreenButton);
 // Initial call
-document.addEventListener('DOMContentLoaded', updateFullscreenButton);
+updateFullscreenButton();
 
 // --- Resize Canvas ---
 function resizeCanvas() {
