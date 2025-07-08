@@ -210,6 +210,9 @@ function draw() {
   ctx.setTransform(scale, 0, 0, scale, offsetX, offsetY);
   ctx.save();
   ctx.translate(-cameraX, 0);
+  // Draw sky background in the game area
+  ctx.fillStyle = '#87ceeb';
+  ctx.fillRect(cameraX, 0, GAME_WIDTH, GAME_HEIGHT);
 
   // Draw platforms
   for (const plat of platforms) {
