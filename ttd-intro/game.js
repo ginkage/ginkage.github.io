@@ -4,8 +4,11 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 // --- Game Constants ---
-const GAME_WIDTH = 800;
-const GAME_HEIGHT = 450;
+const GAME_BASE_WIDTH = 800;
+const GAME_BASE_HEIGHT = 450;
+const GAME_ASPECT = GAME_BASE_WIDTH / GAME_BASE_HEIGHT;
+let GAME_WIDTH = GAME_BASE_WIDTH;
+let GAME_HEIGHT = GAME_BASE_HEIGHT;
 const GRAVITY = 0.6;
 const MOVE_SPEED = 4;
 const JUMP_POWER = 12;
@@ -113,12 +116,26 @@ setupMobileControls();
 
 // --- Resize Canvas ---
 function resizeCanvas() {
-  // Set canvas CSS size to fill viewport
-  canvas.style.width = '100vw';
-  canvas.style.height = '100vh';
-  // Set internal resolution to game world size
-  canvas.width = GAME_WIDTH;
-  canvas.height = GAME_HEIGHT;
+  // Calculate the largest 16:9 area that fits in the window
+  const windowWidth = window.innerWidth;
+  const windowHeight = window.innerHeight;
+  let width = windowWidth;
+  let height = windowWidth / GAME_ASPECT;
+  if (height > windowHeight) {
+    height = windowHeight;
+    width = height * GAME_ASPECT;
+  }
+  // Set canvas CSS size to fill the centered game area
+  canvas.style.width = width + 'px';
+  canvas.style.height = height + 'px';
+  canvas.style.marginLeft = ((windowWidth - width) / 2) + 'px';
+  canvas.style.marginTop = ((windowHeight - height) / 2) + 'px';
+  canvas.style.display = 'block';
+  // Set internal resolution to match the visible area
+  canvas.width = Math.round(width);
+  canvas.height = Math.round(height);
+  GAME_WIDTH = canvas.width;
+  GAME_HEIGHT = canvas.height;
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
@@ -177,8 +194,11 @@ function update() {
     cameraX = 0;
   }
 
-  // Camera follows player (use GAME_WIDTH, not window.innerWidth)
+  // Camera follows player (use dynamic GAME_WIDTH)
   cameraX = Math.max(0, player.x - GAME_WIDTH / 2 + player.width / 2);
+  // Optionally clamp cameraX to level bounds (optional improvement)
+  // let maxCameraX = Math.max(0, platforms[platforms.length-1].x + platforms[platforms.length-1].width - GAME_WIDTH);
+  // cameraX = Math.min(cameraX, maxCameraX);
 
   // Animation update
   if ((left || right) && playerSpriteLoaded && player.onGround) {
