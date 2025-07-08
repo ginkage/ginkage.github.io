@@ -212,7 +212,7 @@ function draw() {
   // Draw sky background in the game area (before camera translation!)
   ctx.fillStyle = '#87ceeb';
   ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-  // Set up clipping region for the game area
+  // Set up clipping region for the game area (before camera translation)
   ctx.save();
   ctx.beginPath();
   ctx.rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -232,11 +232,10 @@ function draw() {
       ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
     }
   }
-
   // Draw player
+  ctx.save();
+  ctx.translate(player.x, player.y);
   if (playerSpriteLoaded) {
-    ctx.save();
-    ctx.translate(player.x, player.y);
     // Flip sprite if moving left
     if (player.vx < 0) {
       ctx.scale(-1, 1);
@@ -256,13 +255,12 @@ function draw() {
         PLAYER_FRAME_WIDTH, PLAYER_FRAME_HEIGHT
       );
     }
-    ctx.restore();
   } else {
     ctx.fillStyle = PLAYER_COLOR;
-    ctx.fillRect(player.x, player.y, player.width, player.height);
+    ctx.fillRect(0, 0, player.width, player.height);
   }
-
-  // End of game drawing
+  ctx.restore();
+  // End of game drawing and clipping
   ctx.restore();
   ctx.setTransform(1, 0, 0, 1, 0, 0); // reset for UI overlays if needed
 }
