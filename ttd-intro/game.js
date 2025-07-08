@@ -138,6 +138,13 @@ function exitFullscreen() {
 // --- Auto Fullscreen on Mobile Landscape with Button ---
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 function updateFullscreenButton() {
+  var debugOverlay = document.getElementById('debugOverlay');
+  var debugText =
+    'isMobile: ' + isMobile() + '<br>' +
+    'isLandscape: ' + isLandscape() + '<br>' +
+    'isFullscreen: ' + isFullscreen() + '<br>' +
+    'fullscreenBtn display: ' + fullscreenBtn.style.display;
+  if (debugOverlay) debugOverlay.innerHTML = debugText;
   if (isMobile() && isLandscape() && !isFullscreen()) {
     fullscreenBtn.style.display = 'block';
   } else {
@@ -161,7 +168,7 @@ document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
 document.addEventListener('mozfullscreenchange', updateFullscreenButton);
 document.addEventListener('MSFullscreenChange', updateFullscreenButton);
 // Initial call
-updateFullscreenButton();
+document.addEventListener('DOMContentLoaded', updateFullscreenButton);
 
 // --- Resize Canvas ---
 function resizeCanvas() {
