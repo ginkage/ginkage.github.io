@@ -112,6 +112,42 @@ function setupMobileControls() {
 }
 setupMobileControls();
 
+// --- Auto Fullscreen on Mobile Landscape ---
+function isMobile() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+function isLandscape() {
+  return window.innerWidth > window.innerHeight;
+}
+function requestFullscreen(elem) {
+  if (elem.requestFullscreen) return elem.requestFullscreen();
+  if (elem.webkitRequestFullscreen) return elem.webkitRequestFullscreen();
+  if (elem.mozRequestFullScreen) return elem.mozRequestFullScreen();
+  if (elem.msRequestFullscreen) return elem.msRequestFullscreen();
+}
+function exitFullscreen() {
+  if (document.exitFullscreen) return document.exitFullscreen();
+  if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+  if (document.mozCancelFullScreen) return document.mozCancelFullScreen();
+  if (document.msExitFullscreen) return document.msExitFullscreen();
+}
+function isFullscreen() {
+  return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+}
+function handleAutoFullscreen() {
+  if (isMobile() && isLandscape()) {
+    if (!isFullscreen()) {
+      requestFullscreen(canvas);
+    }
+  } else {
+    if (isFullscreen()) {
+      exitFullscreen();
+    }
+  }
+}
+window.addEventListener('orientationchange', () => setTimeout(handleAutoFullscreen, 200));
+window.addEventListener('resize', () => setTimeout(handleAutoFullscreen, 200));
+
 // --- Resize Canvas ---
 function resizeCanvas() {
   // Set canvas internal size to window size
