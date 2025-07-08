@@ -207,13 +207,13 @@ function draw() {
   // Fill with black for letterboxing/pillarboxing
   ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Set transform for scaling and centering
   ctx.setTransform(scale, 0, 0, scale, offsetX, offsetY);
+  // Draw sky background in the game area (before camera translation!)
+  ctx.fillStyle = '#87ceeb';
+  ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
   ctx.save();
   ctx.translate(-cameraX, 0);
-  // Draw sky background in the game area
-  ctx.fillStyle = '#87ceeb';
-  ctx.fillRect(cameraX, 0, GAME_WIDTH, GAME_HEIGHT);
-
   // Draw platforms
   for (const plat of platforms) {
     if (platformPattern) {
