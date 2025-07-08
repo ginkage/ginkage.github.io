@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Platformer Game</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background: #222;
+    }
+    #gameCanvas {
+      display: block;
+      margin: 0 auto;
+      background: #87ceeb;
+      width: 100%;
+      height: 100%;
+      max-width: 100vw;
+      max-height: 100vh;
+      touch-action: none;
+    }
+    .mobile-controls {
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 120px;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      pointer-events: none;
+      z-index: 10;
+      background: none;
+    }
+    .btn {
+      position: relative;
+      width: 60px;
+      height: 60px;
+      margin: 20px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      font-size: 2em;
+      border: none;
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      touch-action: none;
+    }
+    .btn-left { order: 1; }
+    .btn-right { order: 2; }
+    .btn-jump { order: 3; margin-left: auto; margin-right: 20px; }
+    @media (min-width: 800px) {
+      .mobile-controls { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="450"></canvas>
+  <div class="mobile-controls">
+    <button class="btn btn-left" id="btnLeft">&#8592;</button>
+    <button class="btn btn-right" id="btnRight">&#8594;</button>
+    <button class="btn btn-jump" id="btnJump">&#8679;</button>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html> 
