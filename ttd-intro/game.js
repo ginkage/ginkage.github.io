@@ -204,7 +204,9 @@ function draw() {
   const offsetX = (canvas.width - GAME_WIDTH * scale) / 2;
   const offsetY = (canvas.height - GAME_HEIGHT * scale) / 2;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // Fill with black for letterboxing/pillarboxing
+  ctx.fillStyle = 'black';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.setTransform(scale, 0, 0, scale, offsetX, offsetY);
   ctx.save();
   ctx.translate(-cameraX, 0);
