@@ -212,7 +212,12 @@ function draw() {
   // Draw sky background in the game area (before camera translation!)
   ctx.fillStyle = '#87ceeb';
   ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  // Set up clipping region for the game area
   ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  ctx.clip();
+  // Now translate for camera
   ctx.translate(-cameraX, 0);
   // Draw platforms
   for (const plat of platforms) {
@@ -257,6 +262,7 @@ function draw() {
     ctx.fillRect(player.x, player.y, player.width, player.height);
   }
 
+  // End of game drawing
   ctx.restore();
   ctx.setTransform(1, 0, 0, 1, 0, 0); // reset for UI overlays if needed
 }
