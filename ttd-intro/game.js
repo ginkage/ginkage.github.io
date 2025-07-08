@@ -169,9 +169,17 @@ document.addEventListener('fullscreenchange', delayedUpdateFullscreenButton);
 document.addEventListener('webkitfullscreenchange', delayedUpdateFullscreenButton);
 document.addEventListener('mozfullscreenchange', delayedUpdateFullscreenButton);
 document.addEventListener('MSFullscreenChange', delayedUpdateFullscreenButton);
-fullscreenBtn.addEventListener('click', function() {
-  requestFullscreen(gameWrapper);
-  fullscreenBtn.style.display = 'none';
+document.addEventListener('DOMContentLoaded', function() {
+  const gameWrapper = document.getElementById('gameWrapper');
+  if (!gameWrapper) {
+    var debugOverlay = document.getElementById('debugOverlay');
+    if (debugOverlay) debugOverlay.innerHTML = 'ERROR: gameWrapper not found!';
+    return;
+  }
+  fullscreenBtn.addEventListener('click', function() {
+    requestFullscreen(gameWrapper);
+    fullscreenBtn.style.display = 'none';
+  });
 });
 // Add a periodic check as a fallback for mobile browsers
 setInterval(updateFullscreenButton, 500);
