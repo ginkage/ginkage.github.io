@@ -117,10 +117,17 @@ function isMobile() {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 function isLandscape() {
+  if (window.screen && window.screen.orientation && window.screen.orientation.type) {
+    return window.screen.orientation.type.startsWith('landscape');
+  }
+  // Fallback to innerWidth/innerHeight
   return window.innerWidth > window.innerHeight;
 }
 function isFullscreen() {
-  return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+  return !!(document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement);
 }
 function requestFullscreen(elem) {
   if (elem.requestFullscreen) return elem.requestFullscreen();
