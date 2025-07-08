@@ -169,6 +169,12 @@ document.addEventListener('fullscreenchange', delayedUpdateFullscreenButton);
 document.addEventListener('webkitfullscreenchange', delayedUpdateFullscreenButton);
 document.addEventListener('mozfullscreenchange', delayedUpdateFullscreenButton);
 document.addEventListener('MSFullscreenChange', delayedUpdateFullscreenButton);
+fullscreenBtn.addEventListener('click', function() {
+  requestFullscreen(gameWrapper);
+  fullscreenBtn.style.display = 'none';
+});
+// Add a periodic check as a fallback for mobile browsers
+setInterval(updateFullscreenButton, 500);
 // Initial call
 updateFullscreenButton();
 
