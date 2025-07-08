@@ -4,11 +4,9 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 // --- Game Constants ---
-const GAME_BASE_WIDTH = 800;
-const GAME_BASE_HEIGHT = 450;
-const GAME_ASPECT = GAME_BASE_WIDTH / GAME_BASE_HEIGHT;
-let GAME_WIDTH = GAME_BASE_WIDTH;
-let GAME_HEIGHT = GAME_BASE_HEIGHT;
+const GAME_WIDTH = 800;
+const GAME_HEIGHT = 450;
+const GAME_ASPECT = GAME_WIDTH / GAME_HEIGHT;
 const GRAVITY = 0.6;
 const MOVE_SPEED = 4;
 const JUMP_POWER = 12;
@@ -116,26 +114,13 @@ setupMobileControls();
 
 // --- Resize Canvas ---
 function resizeCanvas() {
-  // Calculate the largest 16:9 area that fits in the window
-  const windowWidth = window.innerWidth;
-  const windowHeight = window.innerHeight;
-  let width = windowWidth;
-  let height = windowWidth / GAME_ASPECT;
-  if (height > windowHeight) {
-    height = windowHeight;
-    width = height * GAME_ASPECT;
-  }
-  // Set canvas CSS size to fill the centered game area
-  canvas.style.width = width + 'px';
-  canvas.style.height = height + 'px';
-  canvas.style.marginLeft = ((windowWidth - width) / 2) + 'px';
-  canvas.style.marginTop = ((windowHeight - height) / 2) + 'px';
+  // Set canvas internal size to window size
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  canvas.style.margin = '0';
   canvas.style.display = 'block';
-  // Set internal resolution to match the visible area
-  canvas.width = Math.round(width);
-  canvas.height = Math.round(height);
-  GAME_WIDTH = canvas.width;
-  GAME_HEIGHT = canvas.height;
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
@@ -194,9 +179,9 @@ function update() {
     cameraX = 0;
   }
 
-  // Camera follows player (use dynamic GAME_WIDTH)
+  // Camera follows player (use fixed GAME_WIDTH)
   cameraX = Math.max(0, player.x - GAME_WIDTH / 2 + player.width / 2);
-  // Optionally clamp cameraX to level bounds (optional improvement)
+  // Optionally clamp cameraX to level bounds
   // let maxCameraX = Math.max(0, platforms[platforms.length-1].x + platforms[platforms.length-1].width - GAME_WIDTH);
   // cameraX = Math.min(cameraX, maxCameraX);
 
@@ -214,9 +199,13 @@ function update() {
 }
 
 function draw() {
+  // Calculate scale and offset to fit 800x450 into canvas
+  const scale = Math.min(canvas.width / GAME_WIDTH, canvas.height / GAME_HEIGHT);
+  const offsetX = (canvas.width - GAME_WIDTH * scale) / 2;
+  const offsetY = (canvas.height - GAME_HEIGHT * scale) / 2;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-  
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.setTransform(scale, 0, 0, scale, offsetX, offsetY);
   ctx.save();
   ctx.translate(-cameraX, 0);
 
@@ -264,6 +253,7 @@ function draw() {
   }
 
   ctx.restore();
+  ctx.setTransform(1, 0, 0, 1, 0, 0); // reset for UI overlays if needed
 }
 
 function gameLoop() {
