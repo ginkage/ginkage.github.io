@@ -144,6 +144,7 @@ function exitFullscreen() {
 
 // --- Auto Fullscreen on Mobile Landscape with Button ---
 const fullscreenBtn = document.getElementById('fullscreenBtn');
+const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
 function updateFullscreenButton() {
   var debugOverlay = document.getElementById('debugOverlay');
   var isFS = isFullscreen();
@@ -151,16 +152,23 @@ function updateFullscreenButton() {
     'isMobile: ' + isMobile() + '<br>' +
     'isLandscape: ' + isLandscape() + '<br>' +
     'isFullscreen: ' + (isFS ? 'true' : 'false') + '<br>' +
-    'fullscreenBtn display: ' + fullscreenBtn.style.display;
+    'fullscreenBtn display: ' + fullscreenBtn.style.display + '<br>' +
+    'exitFullscreenBtn display: ' + exitFullscreenBtn.style.display;
   if (debugOverlay) debugOverlay.innerHTML = debugText;
-  // Auto-exit fullscreen if in portrait on mobile
+  // Show exitFullscreenBtn if in portrait, mobile, and fullscreen
   if (isMobile() && !isLandscape() && isFS) {
-    exitFullscreen();
+    exitFullscreenBtn.style.display = 'block';
+  } else {
+    exitFullscreenBtn.style.display = 'none';
   }
   if (isMobile() && isLandscape() && !isFS) {
     fullscreenBtn.style.display = 'block';
   } else {
     fullscreenBtn.style.display = 'none';
+  }
+  // Auto-exit fullscreen if in portrait on mobile
+  if (isMobile() && !isLandscape() && isFS) {
+    exitFullscreen();
   }
 }
 // Helper to call updateFullscreenButton after a short delay
@@ -183,6 +191,10 @@ document.addEventListener('DOMContentLoaded', function() {
   fullscreenBtn.addEventListener('click', function() {
     requestFullscreen(gameWrapper);
     fullscreenBtn.style.display = 'none';
+  });
+  exitFullscreenBtn.addEventListener('click', function() {
+    exitFullscreen();
+    exitFullscreenBtn.style.display = 'none';
   });
 });
 // Add a periodic check as a fallback for mobile browsers
