@@ -153,6 +153,10 @@ function updateFullscreenButton() {
     'isFullscreen: ' + (isFS ? 'true' : 'false') + '<br>' +
     'fullscreenBtn display: ' + fullscreenBtn.style.display;
   if (debugOverlay) debugOverlay.innerHTML = debugText;
+  // Auto-exit fullscreen if in portrait on mobile
+  if (isMobile() && !isLandscape() && isFS) {
+    exitFullscreen();
+  }
   if (isMobile() && isLandscape() && !isFS) {
     fullscreenBtn.style.display = 'block';
   } else {
