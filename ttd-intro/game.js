@@ -145,14 +145,7 @@ function exitFullscreen() {
 // --- Auto Fullscreen on Mobile Landscape with Button ---
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 function updateFullscreenButton() {
-  var debugOverlay = document.getElementById('debugOverlay');
   var isFS = isFullscreen();
-  var debugText =
-    'isMobile: ' + isMobile() + '<br>' +
-    'isLandscape: ' + isLandscape() + '<br>' +
-    'isFullscreen: ' + (isFS ? 'true' : 'false') + '<br>' +
-    'fullscreenBtn display: ' + fullscreenBtn.style.display;
-  if (debugOverlay) debugOverlay.innerHTML = debugText;
   // Auto-exit fullscreen if in portrait on mobile
   if (isMobile() && !isLandscape() && isFS) {
     exitFullscreen();
@@ -176,8 +169,6 @@ document.addEventListener('MSFullscreenChange', delayedUpdateFullscreenButton);
 document.addEventListener('DOMContentLoaded', function() {
   const gameWrapper = document.getElementById('gameWrapper');
   if (!gameWrapper) {
-    var debugOverlay = document.getElementById('debugOverlay');
-    if (debugOverlay) debugOverlay.innerHTML = 'ERROR: gameWrapper not found!';
     return;
   }
   fullscreenBtn.addEventListener('click', function() {
