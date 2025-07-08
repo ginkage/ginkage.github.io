@@ -194,18 +194,8 @@ function update() {
 }
 
 function draw() {
-  // Debug: Log canvas dimensions
-  console.log('Canvas size:', canvas.width, 'x', canvas.height);
-  console.log('Canvas style size:', canvas.style.width, 'x', canvas.style.height);
-  console.log('Player position:', player.x, player.y);
-  console.log('Camera X:', cameraX);
-  
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-  
-  // Test: Draw a simple red rectangle in the top-left corner
-  ctx.fillStyle = 'red';
-  ctx.fillRect(0, 0, 50, 50);
   
   ctx.save();
   ctx.translate(-cameraX, 0);
