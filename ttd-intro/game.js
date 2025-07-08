@@ -112,12 +112,15 @@ function setupMobileControls() {
 }
 setupMobileControls();
 
-// --- Auto Fullscreen on Mobile Landscape ---
+// --- Fullscreen Utility Functions ---
 function isMobile() {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 function isLandscape() {
   return window.innerWidth > window.innerHeight;
+}
+function isFullscreen() {
+  return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
 }
 function requestFullscreen(elem) {
   if (elem.requestFullscreen) return elem.requestFullscreen();
@@ -131,22 +134,34 @@ function exitFullscreen() {
   if (document.mozCancelFullScreen) return document.mozCancelFullScreen();
   if (document.msExitFullscreen) return document.msExitFullscreen();
 }
-function isFullscreen() {
-  return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-}
-function handleAutoFullscreen() {
-  if (isMobile() && isLandscape()) {
-    if (!isFullscreen()) {
-      requestFullscreen(canvas);
-    }
+
+// --- Auto Fullscreen on Mobile Landscape with Button ---
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+function updateFullscreenButton() {
+  if (isMobile() && isLandscape() && !isFullscreen()) {
+    fullscreenBtn.style.display = 'block';
   } else {
-    if (isFullscreen()) {
-      exitFullscreen();
-    }
+    fullscreenBtn.style.display = 'none';
   }
 }
-window.addEventListener('orientationchange', () => setTimeout(handleAutoFullscreen, 200));
-window.addEventListener('resize', () => setTimeout(handleAutoFullscreen, 200));
+fullscreenBtn.addEventListener('click', function() {
+  requestFullscreen(canvas);
+  fullscreenBtn.style.display = 'none';
+});
+window.addEventListener('orientationchange', () => setTimeout(() => {
+  handleAutoFullscreen();
+  updateFullscreenButton();
+}, 200));
+window.addEventListener('resize', () => setTimeout(() => {
+  handleAutoFullscreen();
+  updateFullscreenButton();
+}, 200));
+document.addEventListener('fullscreenchange', updateFullscreenButton);
+document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+document.addEventListener('mozfullscreenchange', updateFullscreenButton);
+document.addEventListener('MSFullscreenChange', updateFullscreenButton);
+// Initial call
+updateFullscreenButton();
 
 // --- Resize Canvas ---
 function resizeCanvas() {

@@ -64,6 +64,22 @@
 </head>
 <body>
   <canvas id="gameCanvas" width="800" height="450"></canvas>
+  <button id="fullscreenBtn" style="
+    display: none;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+    padding: 20px 40px;
+    font-size: 1.5em;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    cursor: pointer;
+  ">Tap for Fullscreen</button>
   <div class="mobile-controls">
     <button class="btn btn-left" id="btnLeft">&#8592;</button>
     <button class="btn btn-right" id="btnRight">&#8594;</button>
